@@ -2,6 +2,39 @@ import requests
 import smtplib
 import time
 
+def main():
+    # Prompt user for crypto address and email address
+    address = input("Enter your cryptocurrency address: ")
+    email = input("Enter your email address: ")
+
+    # Prompt user for end date for updates
+    end_date_str = input("Enter the end date for updates (YYYY-MM-DD): ")
+    end_date = datetime.datetime.strptime(end_date_str, "%Y-%m-%d")
+
+    # Create a list of blockchain APIs to check
+    blockchains = [
+        ("Ethereum", "https://api.etherscan.io/api"),
+        ("Bitcoin", "https://blockchain.info/rawaddr"),
+        ("Tron", "https://apilist.tronscan.org/api/account")
+    ]
+
+    # Continuously check for updates until end date is reached or user cancels
+    global keep_updating
+    keep_updating = True
+    while keep_updating and datetime.datetime.now() < end_date:
+        for blockchain in blockchains:
+            name, url = blockchain
+            try:
+                # Check for deposits and withdrawals using the API
+                transactions = get_transactions(url, address)
+                new_deposits, new_withdrawals = get_new_transactions(transactions, name)
+                # If there are new deposits or withdrawals, send an email to the user
+                if new_deposits or new_withdrawals:
+                    send_email(email, name, new_deposits, new_withdrawals)
+            except Exception as e:
+                print(f"Failed to get transactions for {name}: {e}")
+        time.sleep(60)
+
 # Prompt the user for the cryptocurrency address and email
 address = input("Enter the address to track: ")
 email = input("Enter the email to send results to: ")
@@ -79,35 +112,3 @@ def send_email(email, subject, body):
     gmail_password = "your_gmail_password_here"
     recipient = email
 
-def main():
-    # Prompt user for crypto address and email address
-    address = input("Enter your cryptocurrency address: ")
-    email = input("Enter your email address: ")
-
-    # Prompt user for end date for updates
-    end_date_str = input("Enter the end date for updates (YYYY-MM-DD): ")
-    end_date = datetime.datetime.strptime(end_date_str, "%Y-%m-%d")
-
-    # Create a list of blockchain APIs to check
-    blockchains = [
-        ("Ethereum", "https://api.etherscan.io/api"),
-        ("Bitcoin", "https://blockchain.info/rawaddr"),
-        ("Tron", "https://apilist.tronscan.org/api/account")
-    ]
-
-    # Continuously check for updates until end date is reached or user cancels
-    global keep_updating
-    keep_updating = True
-    while keep_updating and datetime.datetime.now() < end_date:
-        for blockchain in blockchains:
-            name, url = blockchain
-            try:
-                # Check for deposits and withdrawals using the API
-                transactions = get_transactions(url, address)
-                new_deposits, new_withdrawals = get_new_transactions(transactions, name)
-                # If there are new deposits or withdrawals, send an email to the user
-                if new_deposits or new_withdrawals:
-                    send_email(email, name, new_deposits, new_withdrawals)
-            except Exception as e:
-                print(f"Failed to get transactions for {name}: {e}")
-        time.sleep(60)
