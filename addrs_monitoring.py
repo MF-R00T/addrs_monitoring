@@ -33,6 +33,7 @@ def main():
                     send_email(email, name, new_deposits, new_withdrawals)
             except Exception as e:
                 print(f"Failed to get transactions for {name}: {e}")
+        #1 min sleep between api calls
         time.sleep(60)
 
 # Prompt the user for the cryptocurrency address and email
